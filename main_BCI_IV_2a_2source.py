@@ -77,7 +77,8 @@ class MyDataset_test(Dataset):
 
 
 def load_trainmat(i):
-    path = "/kaggle/input/datasets/manasamohanpatgar/bci-competition-iv-data-sets-2a".format(i)
+    BASE = "/kaggle/input/datasets/thngdngvn/bci-competition-iv-data-sets-2a"
+    path = f"{BASE}/A{i:02d}T.mat"
     data = scio.loadmat(path)
 
     Feature = data["Feature"].transpose(2, 1, 0)
@@ -102,7 +103,9 @@ def load_trainmat(i):
 
 
 def load_testmat(j):
-    path = "/kaggle/input/datasets/thngdngvn/bci-competition-iv-data-sets-2a".format(i)
+    BASE2 = "/kaggle/input/datasets/thngdngvn/bci-competition-iv-data-sets-2a"
+    path = f"{BASE2}/A{i:02d}T.mat"
+
     data = scio.loadmat(path)
     Feature = data["Feature"].transpose(2, 1, 0)
     Label = data["Label"][:, 0]
