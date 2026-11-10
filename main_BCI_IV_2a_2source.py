@@ -113,7 +113,7 @@ def _load_raw_mat(path, tmin=2.0, tmax=6.0, fs=250):
             
             # X的列：前22列是EEG，23-25是EOG，论文通常只用22个EEG通道
             eeg_seg = X[seg_start:seg_end, :22]  # (1000, 22)
-            feats.append(eeg_seg)
+            feats.append(eeg_seg.T)   # (22, 1000)，通道在前
             labels.append(int(ys[t_idx]))
     
     if not feats:
