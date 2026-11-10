@@ -9,7 +9,7 @@ import random
 import pywt
 import mmd
 import tSNE_4
-from Shallow_Inception_Network_2source import DG_Network
+from Modified_EEGNetwork import DG_Network
 import Dist_Loss
 import os
 
