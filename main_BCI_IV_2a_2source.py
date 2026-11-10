@@ -204,7 +204,7 @@ def train(train_loader1, train_loader2, test_loader, model, optimizer):
             label_train = torch.cat((label_train1, label_train2), dim=0)
             label_domain = torch.cat((label_domain1, label_domain2), dim=0)
 
-            out, dom, Feat_s, Feat = model(data_train1, data_train2,data_train1)   # Feat for reducing the mmd loss  , Feat , alpha
+            out, dom, Feat_s, Feat = model(data_train1, data_train2)   # Feat for reducing the mmd loss  , Feat , alpha
             feat_train.extend(Feat)
 
             # classification loss and domian loss
