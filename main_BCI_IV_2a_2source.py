@@ -124,22 +124,32 @@ def _load_raw_mat(path, tmin=2.0, tmax=6.0, fs=250):
     return Feature, Label
 
 
-def load_trainmat(i):
-    path = f"{BASE}/A{i:02d}T.mat"
-    Feature, Label = _load_raw_mat(path)
-    print(f"[load_trainmat] {path} -> Feature {Feature.shape}, Label {Label.shape}, label range [{Label.min()}, {Label.max()}]")
-    num = Feature.shape[0]
-    num1 = int(num / 2)
-    Feature1 = Feature[0:num1]
-    Label1 = Label[0:num1]
-    label1_ = np.zeros(Feature1.shape[0]) + 0   # 改成 + 0
+def load_trainmat(subject_triplet):
+    """三源域：subject_triplet=(1,2,3) 表示 A01, A02, A03 各作为一个源域。
+    域标签设为 1 / 2 / 3，以便后续训练循环中处理。
+    """
+    idx1, idx2, idx3 = subject_triplet
+
+    path1 = f"{BASE}/A{idx1:02d}T.mat"
+    Feature1, Label1 = _load_raw_mat(path1)
+    label1_ = np.zeros(Feature1.shape[0]) + 1  # 域标签 1
+
+    path2 = f"{BASE}/A{idx2:02d}T.mat"
+    Feature2, Label2 = _load_raw_mat(path2)
+    label2_ = np.zeros(Feature2.shape[0]) + 2  # 域标签 2
+
+    path3 = f"{BASE}/A{idx3:02d}T.mat"
+    Feature3, Label3 = _load_raw_mat(path3)
+    label3_ = np.zeros(Feature3.shape[0]) + 3  # 域标签 3
+
+    print(f"[load_trainmat] Source1 {path1} -> Feature {Feature1.shape}")
+    print(f"[load_trainmat] Source2 {path2} -> Feature {Feature2.shape}")
+    print(f"[load_trainmat] Source3 {path3} -> Feature {Feature3.shape}")
 
     source_domain1 = [Feature1, Label1, label1_]
-    Feature2 = Feature[num1:]
-    Label2 = Label[num1:]
-    label2_ = np.zeros(Feature2.shape[0]) + 1
     source_domain2 = [Feature2, Label2, label2_]
-    return source_domain1, source_domain2
+    source_domain3 = [Feature3, Label3, label3_]
+    return source_domain1, source_domain2, source_domain3
 
 
 def load_testmat(j):
@@ -150,7 +160,7 @@ def load_testmat(j):
     return target_domain
 
 
-def train(train_loader1, train_loader2, test_loader, model, optimizer):
+def train(train_loader1, train_loader2, train_loader3,test_loader, model, optimizer):
     len_train_loader1 = len(train_loader1)
     len_train_loader2 = len(train_loader2)
 
