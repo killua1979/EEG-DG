@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 import random
 import pywt
 import mmd
-import tSNE_4
+#import tSNE_4
 from Modified_EEGNetwork import DG_Network
 import Dist_Loss
 import os
