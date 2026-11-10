@@ -131,7 +131,7 @@ def load_trainmat(i):
     num = Feature.shape[0]
     num1 = int(num / 2)
     Feature1 = Feature[0:num1]
-    Label1 = Label[:num1-1]
+    Label1 = Label[0:num1]
     label1_ = np.zeros(Feature1.shape[0]) + 0   # 改成 + 0
 
     source_domain1 = [Feature1, Label1, label1_]
