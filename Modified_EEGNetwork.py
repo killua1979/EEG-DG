@@ -8,7 +8,7 @@ import numpy as np
 
 
 class DG_Network(nn.Module):
-    def __init__(self, classes, channels, F1=4, D=2, domains=3): 
+    def __init__(self, classes, channels, F1=4, D=2, domains=2): 
         super(DG_Network, self).__init__()
         self.dropout = 0.25  # default:0.25
 
