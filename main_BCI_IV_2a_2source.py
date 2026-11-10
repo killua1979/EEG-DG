@@ -102,7 +102,7 @@ def load_trainmat(i):
 
 
 def load_testmat(j):
-    path = "H:\Database\EEG\Motor Imagery\BCI Competition\BCI_IV\Data_Sets_2a\BCI_IV_2a_Subj{}_session2_2-6s.mat".format(j)
+    path = "H:\Database\EEG\Motor Imagery\BCI Competition\BCI_IV\Data_Sets_2a\BCI_IV_2a_Subj{}_session2_2-6s.mat".format(i)
     data = scio.loadmat(path)
     Feature = data["Feature"].transpose(2, 1, 0)
     Label = data["Label"][:, 0]
