@@ -77,7 +77,7 @@ class MyDataset_test(Dataset):
 
 
 def load_trainmat(i):
-    path = "H:\Database\EEG\Motor Imagery\BCI Competition\BCI_IV\Data_Sets_2a\BCI_IV_2a_Subj{}_session1_2-6s.mat".format(i)
+    path = "H:\Database\EEG\Motor Imagery\BCI Competition\BCI_IV\Data_Sets_2a\BCI_IV_2a_Subj{}_session1_2-6s.mat".format(j)
     data = scio.loadmat(path)
 
     Feature = data["Feature"].transpose(2, 1, 0)
