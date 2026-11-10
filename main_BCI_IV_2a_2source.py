@@ -75,33 +75,52 @@ class MyDataset_test(Dataset):
     def __len__(self):
         return len(self.Feature)
 
+
+
 BASE = "/kaggle/input/datasets/thngdngvn/bci-competition-iv-data-sets-2a"
 
 def _load_raw_mat(path, tmin=2.0, tmax=6.0, fs=250):
     mat = scio.loadmat(path)
-    if 'data' not in mat:
-        raise KeyError(f"{path} 里没有 'data' 字段，实际字段: {list(mat.keys())}")
-    data = mat['data']
-    start, end = int(tmin * fs), int(tmax * fs)
+    data = mat['data']  # shape (1, 9)
+    
+    start_offset = int(tmin * fs)   # 2秒 → 500点
+    end_offset = int(tmax * fs)     # 6秒 → 1500点
+    window_len = end_offset - start_offset  # 1000点 (4秒)
+    
     feats, labels = [], []
-    for k in range(data.shape[1]):
+    
+    # 只遍历后6个结构体（索引3到8），前3个是EOG测试，没有MI标签
+    for k in range(3, data.shape[1]):
         cell = data[0, k]
         if isinstance(cell, np.ndarray):
             cell = cell.flat[0]
-        X = cell['X']
-        while isinstance(X, np.ndarray) and X.dtype == object:
-            X = X.flat[0]
-        X = np.asarray(X, dtype=np.float64)
-        y = int(np.asarray(cell['y']).flatten()[0])
-        art = int(np.asarray(cell['artifacts']).flatten()[0])
-        if art != 0 or X.shape[0] < end:
-            continue
-        feats.append(X[start:end, :])
-        labels.append(y)
+        
+        X = cell['X']               # (total_samples, 25)
+        trials = cell['trial'].flatten()   # 每个trial的起始索引
+        ys = cell['y'].flatten()           # 每个trial的标签
+        arts = cell['artifacts'].flatten() # 伪迹标记
+        
+        for t_idx in range(len(trials)):
+            if arts[t_idx] != 0:
+                continue  # 跳过有伪迹的trial
+            
+            trial_start = int(trials[t_idx])
+            seg_start = trial_start + start_offset
+            seg_end = trial_start + end_offset
+            
+            if seg_end > X.shape[0]:
+                continue  # 数据长度不够，跳过
+            
+            # X的列：前22列是EEG，23-25是EOG，论文通常只用22个EEG通道
+            eeg_seg = X[seg_start:seg_end, :22]  # (1000, 22)
+            feats.append(eeg_seg)
+            labels.append(int(ys[t_idx]))
+    
     if not feats:
-        raise RuntimeError(f"{path} 没有可用 trial")
-    Feature = np.stack(feats, axis=0)
-    Label = np.array(labels)
+        raise RuntimeError(f"{path} 没有提取到任何有效trial，请检查tmin/tmax或伪迹过滤阈值")
+    
+    Feature = np.stack(feats, axis=0)  # (n_trials, 1000, 22)
+    Label = np.array(labels)           # (n_trials,)
     return Feature, Label
 
 
