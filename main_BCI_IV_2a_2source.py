@@ -75,66 +75,60 @@ class MyDataset_test(Dataset):
     def __len__(self):
         return len(self.Feature)
 
-
-
 BASE = "/kaggle/input/datasets/thngdngvn/bci-competition-iv-data-sets-2a"
 
 def _load_raw_mat(path, tmin=2.0, tmax=6.0, fs=250):
-    """从 BCI IV 2a 原始 .mat 提取 (trials, time, channels) 和 (trials,) 标签"""
-    mat = scio.loadmat(path, squeeze_me=False)
-    data = mat['data']  # (1, N_trials)
-    
-    features = []
-    labels = []
-    start = int(tmin * fs)
-    end = int(tmax * fs)
-    
+    mat = scio.loadmat(path)
+    if 'data' not in mat:
+        raise KeyError(f"{path} 里没有 'data' 字段，实际字段: {list(mat.keys())}")
+    data = mat['data']
+    start, end = int(tmin * fs), int(tmax * fs)
+    feats, labels = [], []
     for k in range(data.shape[1]):
-        struct = data[0, k]
-        # scipy 加载后访问方式
-        X = struct['X'][0]        # (time, channels)
-        y = int(struct['y'][0][0])
-        artifacts = int(struct['artifacts'][0][0])
-        if artifacts != 0:
+        cell = data[0, k]
+        if isinstance(cell, np.ndarray):
+            cell = cell.flat[0]
+        X = cell['X']
+        while isinstance(X, np.ndarray) and X.dtype == object:
+            X = X.flat[0]
+        X = np.asarray(X, dtype=np.float64)
+        y = int(np.asarray(cell['y']).flatten()[0])
+        art = int(np.asarray(cell['artifacts']).flatten()[0])
+        if art != 0 or X.shape[0] < end:
             continue
-        if X.shape[0] < end:
-            continue
-        Xw = X[start:end, :]      # (1000, channels)
-        features.append(Xw)
+        feats.append(X[start:end, :])
         labels.append(y)
-    
-    Feature = np.stack(features, axis=0)  # (trials, time, channels)
-    Label = np.array(labels)               # (trials,)
+    if not feats:
+        raise RuntimeError(f"{path} 没有可用 trial")
+    Feature = np.stack(feats, axis=0)
+    Label = np.array(labels)
     return Feature, Label
 
 
 def load_trainmat(i):
     path = f"{BASE}/A{i:02d}T.mat"
     Feature, Label = _load_raw_mat(path)
-    print(f"[load_trainmat] {path} -> Feature {Feature.shape}, Label {Label.shape}")
-    
+    print(f"[load_trainmat] {path} -> Feature {Feature.shape}, Label {Label.shape}, label range [{Label.min()}, {Label.max()}]")
     num = Feature.shape[0]
     num1 = int(num / 2)
-    
     Feature1 = Feature[0:num1]
     Label1 = Label[0:num1]
     label1_ = np.zeros(Feature1.shape[0]) + 1
     source_domain1 = [Feature1, Label1, label1_]
-    
     Feature2 = Feature[num1:]
     Label2 = Label[num1:]
     label2_ = np.zeros(Feature2.shape[0]) + 2
     source_domain2 = [Feature2, Label2, label2_]
-    
     return source_domain1, source_domain2
 
 
 def load_testmat(j):
-    path = f"{BASE}/A{j:02d}T.mat"  # 如果没有 E 文件就用 T
+    path = f"{BASE}/A{j:02d}T.mat"
     Feature, Label = _load_raw_mat(path)
     print(f"[load_testmat] {path} -> Feature {Feature.shape}, Label {Label.shape}")
     target_domain = [Feature, Label]
     return target_domain
+
 
 def train(train_loader1, train_loader2, test_loader, model, optimizer):
     len_train_loader1 = len(train_loader1)
