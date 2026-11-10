@@ -126,11 +126,10 @@ class DG_Network(nn.Module):
         )
 
 
-    def forward(self, data_train1, data_train2, data_train3): 
+    def forward(self, data_train1, data_train2):
         data1 = data_train1.to(torch.float32)
         data2 = data_train2.to(torch.float32)
-        data3 = data_train3.to(torch.float32)
-        data = torch.cat((data1, data2, data3), dim=0)
+        data = torch.cat((data1, data2), dim=0)
 
         # extracting general features
         feat_1 = self.block1_1(data)   
@@ -152,26 +151,23 @@ class DG_Network(nn.Module):
 
         features = torch.flatten(features, 1)    
 
-
-        # extracting special features
+        # extracting special features (only two domains)
         feat1 = self.special_features1(features)  
         feat2 = self.special_features2(features)
-        feat3 = self.special_features3(features)
-        Feat_s = [feat1, feat2, feat3]
+        Feat_s = [feat1, feat2]
 
         # feat for domain classifier, dom for computing domain specific loss
         feat_ = self.domain_classifier(features)
         weight = nn.functional.softmax(feat_, dim=1)
 
-        feat123 = torch.stack((feat1, feat2, feat3), dim=1)   
+        feat12 = torch.stack((feat1, feat2), dim=1)   
         weighted = weight.unsqueeze(0).permute(1, 0, 2)
-        weighted_feature = torch.bmm(weighted, feat123)      
+        weighted_feature = torch.bmm(weighted, feat12)      
         weighted_feature = torch.flatten(weighted_feature, 1)
         feature = self.classifier(weighted_feature)
         out = nn.functional.softmax(feature, dim=1)
 
-        return out, weight, Feat_s, weighted_feature   #
-
+        return out, weight, Feat_s, weighted_feature
 
     def predict(self, data):
         data = data.to(torch.float32)
