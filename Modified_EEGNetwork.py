@@ -3,12 +3,12 @@ import torch
 import torch.nn as nn
 from torch.autograd import Function
 import numpy as np
-#from functions import ReverseLayerF
+from functions import ReverseLayerF
 
 
 
 class DG_Network(nn.Module):
-    def __init__(self, classes, channels, F1=4, D=2, domains=2): 
+    def __init__(self, classes, channels, F1=4, D=2, domains=3): 
         super(DG_Network, self).__init__()
         self.dropout = 0.25  # default:0.25
 
@@ -126,7 +126,6 @@ class DG_Network(nn.Module):
         )
 
 
-
     def forward(self, data_train1, data_train2, data_train3): 
         data1 = data_train1.to(torch.float32)
         data2 = data_train2.to(torch.float32)
@@ -174,7 +173,6 @@ class DG_Network(nn.Module):
         return out, weight, Feat_s, weighted_feature   #
 
 
-
     def predict(self, data):
         data = data.to(torch.float32)
 
@@ -212,4 +210,5 @@ class DG_Network(nn.Module):
         out = nn.functional.softmax(feature, dim=1)
 
         return out, weight, weighted_feature
+
 
